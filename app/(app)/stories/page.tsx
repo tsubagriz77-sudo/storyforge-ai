@@ -6,7 +6,7 @@ import {
   Wand2,
   Copy,
   RefreshCw,
-  Trash2,
+  Trash2, 
   Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
