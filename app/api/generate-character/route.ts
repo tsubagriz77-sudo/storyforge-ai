@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     return new Response('Clé API manquante', { status: 500 });
   }
 
-  const prompt = `Tu es un directeur artistique expert en anime japonais et en production IA vidéo.
+  const prompt = `Tu es un directeur artistique expert en anime japonais et en production IA vidéo. Reponds toujours en francais avec des phrases completes, sans jamais tronquer les mots.
 
 Cree une fiche personnage complete et ultra-detaillee pour ce personnage :
 - Nom : ${name}
