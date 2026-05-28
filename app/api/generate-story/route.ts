@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 export async function POST(req: NextRequest) {
   const { pitch, genre, tone, audience } = await req.json();
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return new Response('Clé API manquante', { status: 500 });
   }
@@ -42,19 +42,24 @@ Pour chaque épisode : numéro, titre, résumé en 2 lignes, cliffhanger
 Réponds uniquement en français. Sois cinématographique et émotionnel.`;
 
   const response = await fetch(
-`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?alt=sse&key=${apiKey}`,
+    'https://api.groq.com/openai/v1/chat/completions',
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        stream: true,
       }),
     }
   );
 
   if (!response.ok) {
     const error = await response.text();
-    return new Response(`Erreur Gemini: ${error}`, { status: 500 });
+    return new Response(`Erreur Groq: ${error}`, { status: 500 });
   }
 
   const stream = new ReadableStream({
@@ -67,15 +72,14 @@ Réponds uniquement en français. Sois cinématographique et émotionnel.`;
         const chunk = decoder.decode(value);
         const lines = chunk.split('\n');
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6).trim();
-            if (data === '[DONE]') continue;
-            try {
-              const parsed = JSON.parse(data);
-              const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
-              if (text) controller.enqueue(new TextEncoder().encode(text));
-            } catch {}
-          }
+          if (!line.startsWith('data: ')) continue;
+          const data = line.slice(6).trim();
+          if (data === '[DONE]') continue;
+          try {
+            const parsed = JSON.parse(data);
+            const text = parsed.choices?.[0]?.delta?.content || '';
+            if (text) controller.enqueue(new TextEncoder().encode(text));
+          } catch {}
         }
       }
       controller.close();
