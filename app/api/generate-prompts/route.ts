@@ -1,0 +1,88 @@
+import { NextRequest } from 'next/server';
+
+export async function POST(req: NextRequest) {
+  const { script, characterDesc, animeStyle } = await req.json();
+
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    return new Response('Clé API manquante', { status: 500 });
+  }
+
+  const prompt = `Tu es un expert en direction artistique IA et génération vidéo anime.
+
+Style anime à utiliser : ${animeStyle}
+Style prefix universel : "High-quality 2D anime style, ${animeStyle} aesthetic, crisp clean line art, cel-shading, flat color fills, sharp shadow edges, cinematic anime composition, dramatic lighting, no photorealism, no 3D render, Japanese TV anime quality, 1080p vertical format (9:16)."
+
+${characterDesc ? `Descriptions visuelles des personnages :\n${characterDesc}\n` : ''}
+
+Script de l'épisode :
+${script}
+
+Pour chaque clip du script, génère un prompt complet pour Google Flow / Veo.
+
+Format pour chaque clip :
+
+### CLIP [numéro] — [titre/type de scène]
+
+**Scène :** Description courte de la scène
+
+**Prompt Google Flow :**
+[Style prefix anime] + [Description détaillée en anglais : décor, lumière, angle caméra, personnages présents avec description précise de leur apparence et vêtements, action, mouvement]
+
+**Lip Sync :** [Si dialogue : transcription exacte + description syllabe par syllabe des mouvements de lèvres]
+
+**Audio :** [Dialogue exact ou description VO]
+
+---
+
+Sois extrêmement précis sur les descriptions visuelles. Assure la cohérence visuelle des personnages entre tous les clips.`;
+
+  const response = await fetch(
+    'https://api.groq.com/openai/v1/chat/completions',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        stream: true,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.text();
+    return new Response(`Erreur Groq: ${error}`, { status: 500 });
+  }
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const data = line.slice(6).trim();
+          if (data === '[DONE]') continue;
+          try {
+            const parsed = JSON.parse(data);
+            const text = parsed.choices?.[0]?.delta?.content || '';
+            if (text) controller.enqueue(new TextEncoder().encode(text));
+          } catch {}
+        }
+      }
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  });
+}
