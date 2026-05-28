@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 
 interface Episode {
   id: string;
@@ -22,7 +21,6 @@ export default function EpisodesPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamContent, setStreamContent] = useState('');
   const [copied, setCopied] = useState(false);
-
   const [bible, setBible] = useState('');
   const [characters, setCharacters] = useState('');
   const [epNumber, setEpNumber] = useState('1');
@@ -59,7 +57,7 @@ export default function EpisodesPage() {
       const newEp: Episode = {
         id: Date.now().toString(),
         number: parseInt(epNumber),
-        title: epTitle || `Épisode ${epNumber}`,
+        title: epTitle || `Episode ${epNumber}`,
         content: fullContent,
       };
 
@@ -67,7 +65,7 @@ export default function EpisodesPage() {
       setSelectedEp(newEp);
       setStreamContent('');
     } catch (e) {
-      setStreamContent('Erreur lors de la génération.');
+      setStreamContent('Erreur lors de la generation.');
     }
 
     setIsGenerating(false);
@@ -87,18 +85,20 @@ export default function EpisodesPage() {
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Générateur d&apos;Épisodes</h1>
-        <p className="text-muted-foreground text-sm mt-1">Génère des scripts complets clip par clip pour chaque épisode.</p>
+        <h1 className="text-2xl font-bold tracking-tight">Generateur d&apos;Episodes</h1>
+        <p className="text-muted-foreground text-sm mt-1">
+          Genere des scripts complets clip par clip pour chaque episode.
+        </p>
       </div>
 
       <Card className="border-white/5 bg-white/[0.02] mb-8">
         <CardContent className="p-6 space-y-4">
           <div>
-            <Label className="text-xs text-muted-foreground mb-2 block">Bible de la série</Label>
+            <Label className="text-xs text-muted-foreground mb-2 block">Bible de la serie</Label>
             <Textarea
               value={bible}
               onChange={e => setBible(e.target.value)}
-              placeholder="Colle ici la bible complète de ta série (pitch, personnages, structure)..."
+              placeholder="Colle ici la bible complete de ta serie..."
               className="bg-white/5 border-white/10 min-h-[120px] resize-none"
             />
           </div>
@@ -107,13 +107,13 @@ export default function EpisodesPage() {
             <Textarea
               value={characters}
               onChange={e => setCharacters(e.target.value)}
-              placeholder="Colle ici les fiches personnages pour la cohérence visuelle..."
+              placeholder="Colle ici les fiches personnages..."
               className="bg-white/5 border-white/10 min-h-[80px] resize-none"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs text-muted-foreground mb-2 block">Numéro d'épisode</Label>
+              <Label className="text-xs text-muted-foreground mb-2 block">Numero d&apos;episode</Label>
               <Input
                 type="number"
                 value={epNumber}
@@ -123,11 +123,11 @@ export default function EpisodesPage() {
               />
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground mb-2 block">Titre de l'épisode (optionnel)</Label>
+              <Label className="text-xs text-muted-foreground mb-2 block">Titre (optionnel)</Label>
               <Input
                 value={epTitle}
                 onChange={e => setEpTitle(e.target.value)}
-                placeholder="Ex : Le Secret de la Famille"
+                placeholder="Ex : Le Secret"
                 className="bg-white/5 border-white/10"
               />
             </div>
@@ -138,9 +138,9 @@ export default function EpisodesPage() {
             className="w-full bg-gradient-to-r from-cyan-500 to-teal-400 hover:opacity-90 text-white font-medium"
           >
             {isGenerating ? (
-              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Génération en cours...</>
+              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Generation en cours...</>
             ) : (
-              <><Wand2 className="w-4 h-4 mr-2" />Générer le script complet</>
+              <><Wand2 className="w-4 h-4 mr-2" />Generer le script complet</>
             )}
           </Button>
         </CardContent>
@@ -151,7 +151,7 @@ export default function EpisodesPage() {
           <CardContent className="p-6">
             <pre className="text-sm text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed max-h-[400px] overflow-y-auto">
               {streamContent}
-              {isGenerating && <span className="animate-pulse text-cyan-400">▋</span>}
+              {isGenerating && <span className="animate-pulse text-cyan-400">&#9611;</span>}
             </pre>
           </CardContent>
         </Card>
@@ -160,10 +160,10 @@ export default function EpisodesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-3">
           <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-            {episodes.length} Épisode{episodes.length > 1 ? 's' : ''}
+            {episodes.length} Episode{episodes.length > 1 ? 's' : ''}
           </span>
           {episodes.length === 0 && (
-            <p className="text-sm text-muted-foreground py-4">Aucun épisode généré.</p>
+            <p className="text-sm text-muted-foreground py-4">Aucun episode genere.</p>
           )}
           {episodes.map(ep => (
             <div
@@ -182,7 +182,7 @@ export default function EpisodesPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium">{ep.title}</p>
-                    <p className="text-xs text-muted-foreground">Épisode {ep.number}</p>
+                    <p className="text-xs text-muted-foreground">Episode {ep.number}</p>
                   </div>
                 </div>
                 <button
@@ -207,9 +207,26 @@ export default function EpisodesPage() {
                     className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors"
                   >
                     {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copied ? 'Copié' : 'Copier'}
+                    {copied ? 'Copie' : 'Copier'}
                   </button>
                 </div>
               </CardHeader>
               <CardContent>
-                <pre className="text-sm text-muted-foreground whitespace-pre-wrap f
+                <pre className="text-sm text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed max-h-[600px] overflow-y-auto">
+                  {selectedEp.content}
+                </pre>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-white/5 bg-white/[0.02] h-full flex items-center justify-center">
+              <CardContent className="text-center py-20">
+                <Film className="w-8 h-8 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground text-sm">Genere un episode ou selectionnes-en un</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
