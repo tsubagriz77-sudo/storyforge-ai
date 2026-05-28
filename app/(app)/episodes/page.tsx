@@ -87,7 +87,7 @@ export default function EpisodesPage() {
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Générateur d'Épisodes</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Générateur d&apos;Épisodes</h1>
         <p className="text-muted-foreground text-sm mt-1">Génère des scripts complets clip par clip pour chaque épisode.</p>
       </div>
 
