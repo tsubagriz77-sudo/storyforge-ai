@@ -8,44 +8,62 @@ export async function POST(req: NextRequest) {
     return new Response('Clé API manquante', { status: 500 });
   }
 
-  const prompt = `Tu es un directeur artistique expert en anime et production IA.
+  const prompt = `Tu es un directeur artistique expert en anime japonais et en production IA vidéo.
 
-Génère une fiche personnage ultra-détaillée pour : ${name} (${role || 'personnage principal'})
-${context ? `\nContexte de la série :\n${context}` : ''}
+Cree une fiche personnage complete et ultra-detaillee pour ce personnage :
+- Nom : ${name}
+- Role : ${role || 'personnage principal'}
+${context ? `- Contexte de la serie : ${context}` : ''}
 
-Structure ta réponse ainsi :
+IMPORTANT : Invente tous les details manquants de facon coherente avec le nom et le role. Sois tres precis et concret.
+
+Reponds exactement dans ce format :
 
 ## ${name}
 
-**Âge :** 
-**Taille / Poids :**
-**Anniversaire :**
-**Nationalité :**
+**Age :** [nombre precis]
+**Taille :** [en cm]
+**Poids :** [en kg]
+**Anniversaire :** [jour et mois]
+**Nationalite :** [pays]
 
 ---
 
-### PERSONNALITÉ
-5 traits caractéristiques détaillés
+### PERSONNALITE
+[5 traits de caractere detailles, 2-3 phrases chacun]
 
 ### APPARENCE PHYSIQUE
-Description précise : peau, cheveux (couleur + code hex), yeux (couleur + code hex), morphologie, expression habituelle
+- **Peau :** [description precise + teinte]
+- **Cheveux :** [couleur, longueur, coiffure] — Code hex : #[code]
+- **Yeux :** [couleur, forme, expression] — Code hex : #[code]
+- **Morphologie :** [corpulence, taille, posture]
+- **Expression habituelle :** [description]
 
 ### PALETTE DE COULEURS
-Liste 5 couleurs avec codes hex pour la génération IA
+1. #[code] — [nom de la couleur] ([usage : vetements/peau/cheveux])
+2. #[code] — [nom de la couleur] ([usage])
+3. #[code] — [nom de la couleur] ([usage])
+4. #[code] — [nom de la couleur] ([usage])
+5. #[code] — [nom de la couleur] ([usage])
 
 ### TENUE SIGNATURE
-Description précise des vêtements, couleurs, accessoires
+[Description precise et detaillee des vetements, couleurs exactes, accessoires, chaussures]
 
 ### ARC NARRATIF
-Évolution du personnage sur la saison
+[Evolution du personnage sur la saison en 3-4 phrases]
 
-### PROMPT IMAGE (Google Flow / Veo)
-Prompt en anglais prêt à utiliser pour générer une fiche personnage style anime (3 vues : face, profil, dos)
+### PROMPT IMAGE GOOGLE FLOW
+[Prompt en anglais, pret a coller dans Google Flow/Veo. Format : "High-quality 2D anime style, Kuroko no Basket aesthetic, character sheet of [nom], [description physique complete en anglais], front view, side view, back view, full body, [couleurs], white background, professional anime production quality"]
 
 ### LIP SYNC
-Description de la bouche et des lèvres pour chaque son principal en français
-
-Sois extrêmement précis sur les descriptions visuelles. Style anime professionnel type Kuroko no Basket.`;
+- Son "A" : [description mouvement levres]
+- Son "E" : [description]
+- Son "I" : [description]
+- Son "O" : [description]
+- Son "U" : [description]
+- Consonne "P/B" : [description]
+- Consonne "M" : [description]
+- Consonne "T/D" : [description]`;
 
   const response = await fetch(
     'https://api.groq.com/openai/v1/chat/completions',
@@ -59,6 +77,7 @@ Sois extrêmement précis sur les descriptions visuelles. Style anime profession
         model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
         stream: true,
+        temperature: 0.7,
       }),
     }
   );
