@@ -142,7 +142,7 @@ export default function ProjectsPage() {
                         </p>
                       )}
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {new Date(project.created_at).toLocaleDateString('fr-FR')}
+{project.created_at ? new Date(project.created_at).toLocaleDateString('fr-FR') : ''}
                       </p>
                     </div>
                   </div>
