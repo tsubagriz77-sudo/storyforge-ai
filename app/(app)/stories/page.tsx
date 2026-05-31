@@ -1,26 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import {
-  BookOpen,
-  Wand2,
-  Copy,
-  RefreshCw,
-  Trash2, 
-  Check,
-} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { BookOpen, Wand2, Copy, RefreshCw, Trash2, Check, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Story {
   id: string;
@@ -29,15 +16,21 @@ interface Story {
   tone: string;
   targetAudience: string;
   content: string;
-  status: string;
 }
 
-const genres = ['Drame', 'Thriller', 'Sci-Fi', 'Fantasy', 'Romance', 'Horreur', 'Comédie', 'Action'];
-const tones = ['Sombre', 'Léger', 'Suspense', 'Émotionnel', 'Épique', 'Intime'];
-const audiences = ['Gen Z', 'Millennials', 'Ados', 'Fans d\'anime', 'Grand public'];
+interface Project {
+  id: string;
+  title: string;
+}
+
+const genres = ['Drame', 'Thriller', 'Sci-Fi', 'Fantasy', 'Romance', 'Horreur', 'Comedie', 'Action'];
+const tones = ['Sombre', 'Leger', 'Suspense', 'Emotionnel', 'Epique', 'Intime'];
+const audiences = ['Gen Z', 'Millennials', 'Ados', 'Fans anime', 'Grand public'];
 
 export default function StoriesPage() {
   const [stories, setStories] = useState<Story[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string>('');
   const [genre, setGenre] = useState('Drame');
   const [tone, setTone] = useState('Sombre');
   const [audience, setAudience] = useState('Gen Z');
@@ -46,6 +39,15 @@ export default function StoriesPage() {
   const [streamContent, setStreamContent] = useState('');
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/projects')
+      .then(r => r.json())
+      .then(data => setProjects(data))
+      .catch(() => {});
+  }, []);
 
   const handleGenerate = async () => {
     if (!pitch) return;
@@ -85,17 +87,45 @@ export default function StoriesPage() {
         tone,
         targetAudience: audience,
         content: fullContent,
-        status: 'draft',
       };
 
       setStories(prev => [newStory, ...prev]);
       setSelectedStory(newStory);
       setStreamContent('');
+
+      // Sauvegarde automatique si un projet est selectionne
+      if (selectedProject) {
+        await saveToProject(newStory, selectedProject);
+      }
     } catch (e) {
-      setStreamContent('Erreur lors de la génération. Vérifie ta clé API.');
+      setStreamContent('Erreur lors de la generation.');
     }
 
     setIsGenerating(false);
+  };
+
+  const saveToProject = async (story: Story, projectId: string) => {
+    setSaving(true);
+    try {
+      await fetch('/api/save-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          table: 'episodes',
+          data: {
+            project_id: projectId,
+            number: 0,
+            title: story.title,
+            content: story.content,
+          },
+        }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e) {
+      console.error(e);
+    }
+    setSaving(false);
   };
 
   const handleDelete = (id: string) => {
@@ -112,18 +142,34 @@ export default function StoriesPage() {
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Générateur de Séries</h1>
-        <p className="text-muted-foreground text-sm mt-1">Génère une bible complète pour ta mini-série TikTok.</p>
+        <h1 className="text-2xl font-bold tracking-tight">Generateur de Series</h1>
+        <p className="text-muted-foreground text-sm mt-1">Genere une bible complete pour ta mini-serie TikTok.</p>
       </div>
 
       <Card className="border-white/5 bg-white/[0.02] mb-8">
         <CardContent className="p-6 space-y-4">
+          {projects.length > 0 && (
+            <div>
+              <Label className="text-xs text-muted-foreground mb-2 block">Sauvegarder dans un projet (optionnel)</Label>
+              <Select value={selectedProject} onValueChange={setSelectedProject}>
+                <SelectTrigger className="bg-white/5 border-white/10">
+                  <SelectValue placeholder="Choisir un projet..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Aucun projet</SelectItem>
+                  {projects.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div>
-            <Label className="text-xs text-muted-foreground mb-2 block">Pitch de ta série</Label>
+            <Label className="text-xs text-muted-foreground mb-2 block">Pitch de ta serie</Label>
             <Textarea
               value={pitch}
               onChange={e => setPitch(e.target.value)}
-              placeholder="Ex : Deux ados dont les familles se haïssent depuis 30 ans se retrouvent dans le même lycée. Ils vont enquêter sur le passé et tomber amoureux en secret..."
+              placeholder="Ex : Deux ados dont les familles se haissent depuis 30 ans se retrouvent dans le meme lycee..."
               className="bg-white/5 border-white/10 min-h-[100px] resize-none"
             />
           </div>
@@ -168,11 +214,16 @@ export default function StoriesPage() {
             className="w-full bg-gradient-to-r from-cyan-500 to-teal-400 hover:opacity-90 text-white font-medium"
           >
             {isGenerating ? (
-              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Génération en cours...</>
+              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Generation en cours...</>
             ) : (
-              <><Wand2 className="w-4 h-4 mr-2" />Générer la bible complète</>
+              <><Wand2 className="w-4 h-4 mr-2" />Generer la bible complete</>
             )}
           </Button>
+          {saved && (
+            <p className="text-xs text-green-400 flex items-center gap-1">
+              <Check className="w-3 h-3" /> Sauvegarde dans le projet
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -181,7 +232,7 @@ export default function StoriesPage() {
           <CardContent className="p-6">
             <pre className="text-sm text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed max-h-[400px] overflow-y-auto">
               {streamContent}
-              {isGenerating && <span className="animate-pulse text-cyan-400">▋</span>}
+              {isGenerating && <span className="animate-pulse text-cyan-400">&#9611;</span>}
             </pre>
           </CardContent>
         </Card>
@@ -190,10 +241,10 @@ export default function StoriesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-3">
           <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-            {stories.length} Série{stories.length > 1 ? 's' : ''}
+            {stories.length} Serie{stories.length > 1 ? 's' : ''}
           </span>
           {stories.length === 0 && (
-            <p className="text-sm text-muted-foreground py-4">Aucune série générée pour l'instant.</p>
+            <p className="text-sm text-muted-foreground py-4">Aucune serie generee pour l&apos;instant.</p>
           )}
           {stories.map(story => (
             <div
@@ -235,13 +286,25 @@ export default function StoriesPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{selectedStory.title}</CardTitle>
-                  <button
-                    onClick={() => handleCopy(selectedStory.content)}
-                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors"
-                  >
-                    {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copied ? 'Copié' : 'Copier'}
-                  </button>
+                  <div className="flex items-center gap-3">
+                    {selectedProject && (
+                      <button
+                        onClick={() => saveToProject(selectedStory, selectedProject)}
+                        disabled={saving}
+                        className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleCopy(selectedStory.content)}
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copied ? 'Copie' : 'Copier'}
+                    </button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -254,12 +317,12 @@ export default function StoriesPage() {
             <Card className="border-white/5 bg-white/[0.02] h-full flex items-center justify-center">
               <CardContent className="text-center py-20">
                 <BookOpen className="w-8 h-8 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground text-sm">Génère une série ou sélectionne-en une</p>
+                <p className="text-muted-foreground text-sm">Genere une serie ou selectionnes-en une</p>
               </CardContent>
             </Card>
           )}
         </div>
       </div>
     </div>
-  ); 
+  );
 }
