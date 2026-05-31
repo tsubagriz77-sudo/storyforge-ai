@@ -23,9 +23,10 @@ import {
 
 const navLinks = [
   { href: '/dashboard', label: 'Dashboard' },
+  { href: '/projects', label: 'Projets' },
   { href: '/characters', label: 'Characters' },
   { href: '/stories', label: 'Stories' },
-  { href: '/episodes', label: 'Épisodes' },
+  { href: '/episodes', label: 'Episodes' },
   { href: '/hooks', label: 'Hooks' },
   { href: '/prompts', label: 'Prompts' },
 ];
