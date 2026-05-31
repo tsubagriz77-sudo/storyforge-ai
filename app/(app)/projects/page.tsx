@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, Plus, Trash2, ArrowRight, Wand2 } from 'lucide-react';
+import { Folder, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 interface Project {
   id: string;
@@ -56,7 +57,9 @@ export default function ProjectsPage() {
     setCreating(false);
   };
 
-  const deleteProject = async (id: string) => {
+  const deleteProject = async (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!confirm('Supprimer ce projet ?')) return;
     await fetch('/api/projects', {
       method: 'DELETE',
@@ -124,39 +127,38 @@ export default function ProjectsPage() {
       ) : (
         <div className="space-y-3">
           {projects.map(project => (
-            <Card
-              key={project.id}
-              className="border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all group"
-            >
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-teal-400/20 flex items-center justify-center">
-                      <Folder className="w-5 h-5 text-cyan-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{project.title}</p>
-                      {project.pitch && (
-                        <p className="text-xs text-muted-foreground mt-0.5 max-w-md truncate">
-                          {project.pitch}
+            <Link key={project.id} href={`/projects/${project.id}`}>
+              <Card className="border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all group cursor-pointer">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-teal-400/20 flex items-center justify-center">
+                        <Folder className="w-5 h-5 text-cyan-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{project.title}</p>
+                        {project.pitch && (
+                          <p className="text-xs text-muted-foreground mt-0.5 max-w-md truncate">
+                            {project.pitch}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {project.created_at ? new Date(project.created_at).toLocaleDateString('fr-FR') : ''}
                         </p>
-                      )}
-                      <p className="text-xs text-muted-foreground mt-0.5">
-{project.created_at ? new Date(project.created_at).toLocaleDateString('fr-FR') : ''}
-                      </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={e => deleteProject(e, project.id)}
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all p-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => deleteProject(project.id)}
-                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all p-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       )}
