@@ -6,10 +6,11 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+const allowedTables = ['characters', 'episodes', 'hooks'];
+
 export async function POST(req: NextRequest) {
   const { table, data } = await req.json();
 
-  const allowedTables = ['characters', 'episodes', 'hooks'];
   if (!allowedTables.includes(table)) {
     return new Response('Table non autorisee', { status: 400 });
   }
@@ -25,6 +26,27 @@ export async function POST(req: NextRequest) {
   }
 
   return new Response(JSON.stringify(result), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+export async function DELETE(req: NextRequest) {
+  const { table, id } = await req.json();
+
+  if (!allowedTables.includes(table)) {
+    return new Response('Table non autorisee', { status: 400 });
+  }
+
+  const { error } = await supabase
+    .from(table)
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    return new Response(JSON.stringify({ error }), { status: 500 });
+  }
+
+  return new Response(JSON.stringify({ success: true }), {
     headers: { 'Content-Type': 'application/json' },
   });
 }
