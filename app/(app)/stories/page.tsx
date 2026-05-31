@@ -30,7 +30,7 @@ const audiences = ['Gen Z', 'Millennials', 'Ados', 'Fans anime', 'Grand public']
 export default function StoriesPage() {
   const [stories, setStories] = useState<Story[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProject, setSelectedProject] = useState<string>('');
+  const [selectedProject, setSelectedProject] = useState<string>('none');
   const [genre, setGenre] = useState('Drame');
   const [tone, setTone] = useState('Sombre');
   const [audience, setAudience] = useState('Gen Z');
@@ -93,8 +93,7 @@ export default function StoriesPage() {
       setSelectedStory(newStory);
       setStreamContent('');
 
-      // Sauvegarde automatique si un projet est selectionne
-      if (selectedProject) {
+      if (selectedProject && selectedProject !== 'none') {
         await saveToProject(newStory, selectedProject);
       }
     } catch (e) {
@@ -156,7 +155,7 @@ export default function StoriesPage() {
                   <SelectValue placeholder="Choisir un projet..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Aucun projet</SelectItem>
+                  <SelectItem value="none">Aucun projet</SelectItem>
                   {projects.map(p => (
                     <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
                   ))}
@@ -287,7 +286,7 @@ export default function StoriesPage() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{selectedStory.title}</CardTitle>
                   <div className="flex items-center gap-3">
-                    {selectedProject && (
+                    {selectedProject && selectedProject !== 'none' && (
                       <button
                         onClick={() => saveToProject(selectedStory, selectedProject)}
                         disabled={saving}
