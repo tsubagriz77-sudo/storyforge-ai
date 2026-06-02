@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import { getAuthHeaders } from '@/hooks/useAuth';
 
 interface Project {
   id: string;
@@ -29,9 +30,10 @@ export default function ProjectsPage() {
 
   const fetchProjects = async () => {
     try {
-      const res = await fetch('/api/projects');
+      const headers = await getAuthHeaders();
+      const res = await fetch('/api/projects', { headers });
       const data = await res.json();
-      setProjects(data);
+      setProjects(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error(e);
     }
@@ -42,9 +44,10 @@ export default function ProjectsPage() {
     if (!newTitle) return;
     setCreating(true);
     try {
+      const headers = await getAuthHeaders();
       const res = await fetch('/api/projects', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ title: newTitle, pitch: newPitch }),
       });
       const data = await res.json();
@@ -61,9 +64,10 @@ export default function ProjectsPage() {
     e.preventDefault();
     e.stopPropagation();
     if (!confirm('Supprimer ce projet ?')) return;
+    const headers = await getAuthHeaders();
     await fetch('/api/projects', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ id }),
     });
     setProjects(prev => prev.filter(p => p.id !== id));
