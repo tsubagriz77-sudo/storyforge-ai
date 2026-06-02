@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
 import {
   Sparkles,
   Menu,
@@ -21,6 +22,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 const navLinks = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/projects', label: 'Projets' },
@@ -33,7 +39,22 @@ const navLinks = [
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/auth/login');
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5">
@@ -65,27 +86,32 @@ export function Navbar() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-white">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500 to-teal-400 flex items-center justify-center">
-                    <User className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <ChevronDown className="w-3.5 h-3.5" />
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-white">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500 to-teal-400 flex items-center justify-center">
+                      <User className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <span className="text-xs max-w-[120px] truncate">{user.email}</span>
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-card border-border">
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="gap-2 text-destructive cursor-pointer">
+                    <LogOut className="w-4 h-4" />
+                    Deconnexion
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link href="/auth/login">
+                <Button size="sm" className="bg-gradient-to-r from-cyan-500 to-teal-400 text-white">
+                  Connexion
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-card border-border">
-                <DropdownMenuItem className="gap-2">
-                  <Settings className="w-4 h-4" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2 text-destructive">
-                  <LogOut className="w-4 h-4" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </Link>
+            )}
           </div>
 
           <Button
@@ -115,6 +141,18 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
+              {user ? (
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-white/5 text-left"
+                >
+                  Deconnexion
+                </button>
+              ) : (
+                <Link href="/auth/login" className="px-3 py-2.5 rounded-lg text-sm font-medium text-cyan-400">
+                  Connexion
+                </Link>
+              )}
             </nav>
           </div>
         )}
