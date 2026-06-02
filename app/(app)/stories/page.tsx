@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getAuthHeaders } from '@/hooks/useAuth';
 
 interface Story {
   id: string;
@@ -43,10 +44,12 @@ export default function StoriesPage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    fetch('/api/projects')
-      .then(r => r.json())
-      .then(data => setProjects(data))
-      .catch(() => {});
+    getAuthHeaders().then(headers => {
+      fetch('/api/projects', { headers })
+        .then(r => r.json())
+        .then(data => setProjects(Array.isArray(data) ? data : []))
+        .catch(() => {});
+    });
   }, []);
 
   const handleGenerate = async () => {
@@ -106,9 +109,10 @@ export default function StoriesPage() {
   const saveToProject = async (story: Story, projectId: string) => {
     setSaving(true);
     try {
+      const headers = await getAuthHeaders();
       await fetch('/api/save-content', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           table: 'episodes',
           data: {
@@ -168,7 +172,7 @@ export default function StoriesPage() {
             <Textarea
               value={pitch}
               onChange={e => setPitch(e.target.value)}
-              placeholder="Ex : Deux ados dont les familles se haissent depuis 30 ans se retrouvent dans le meme lycee..."
+              placeholder="Ex : Deux ados dont les familles se haissent depuis 30 ans..."
               className="bg-white/5 border-white/10 min-h-[100px] resize-none"
             />
           </div>
