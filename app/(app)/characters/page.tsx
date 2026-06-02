@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { Users, Wand2, RefreshCw, Trash2, Copy, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Users, Wand2, RefreshCw, Trash2, Copy, Check, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Character {
   id: string;
@@ -15,8 +16,15 @@ interface Character {
   content: string;
 }
 
+interface Project {
+  id: string;
+  title: string;
+}
+
 export default function CharactersPage() {
   const [characters, setCharacters] = useState<Character[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string>('none');
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [context, setContext] = useState('');
@@ -24,6 +32,15 @@ export default function CharactersPage() {
   const [streamContent, setStreamContent] = useState('');
   const [selectedChar, setSelectedChar] = useState<Character | null>(null);
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/projects')
+      .then(r => r.json())
+      .then(data => setProjects(data))
+      .catch(() => {});
+  }, []);
 
   const handleGenerate = async () => {
     if (!name) return;
@@ -63,11 +80,39 @@ export default function CharactersPage() {
       setCharacters(prev => [newChar, ...prev]);
       setSelectedChar(newChar);
       setStreamContent('');
+
+      if (selectedProject && selectedProject !== 'none') {
+        await saveToProject(newChar, selectedProject);
+      }
     } catch (e) {
-      setStreamContent('Erreur lors de la génération.');
+      setStreamContent('Erreur lors de la generation.');
     }
 
     setIsGenerating(false);
+  };
+
+  const saveToProject = async (char: Character, projectId: string) => {
+    setSaving(true);
+    try {
+      await fetch('/api/save-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          table: 'characters',
+          data: {
+            project_id: projectId,
+            name: char.name,
+            role: char.role,
+            content: char.content,
+          },
+        }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e) {
+      console.error(e);
+    }
+    setSaving(false);
   };
 
   const handleDelete = (id: string) => {
@@ -84,15 +129,31 @@ export default function CharactersPage() {
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Générateur de Personnages</h1>
-        <p className="text-muted-foreground text-sm mt-1">Crée des fiches personnages détaillées pour ta série anime.</p>
+        <h1 className="text-2xl font-bold tracking-tight">Generateur de Personnages</h1>
+        <p className="text-muted-foreground text-sm mt-1">Cree des fiches personnages detaillees pour ta serie anime.</p>
       </div>
 
       <Card className="border-white/5 bg-white/[0.02] mb-8">
         <CardContent className="p-6 space-y-4">
+          {projects.length > 0 && (
+            <div>
+              <Label className="text-xs text-muted-foreground mb-2 block">Sauvegarder dans un projet (optionnel)</Label>
+              <Select value={selectedProject} onValueChange={setSelectedProject}>
+                <SelectTrigger className="bg-white/5 border-white/10">
+                  <SelectValue placeholder="Choisir un projet..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun projet</SelectItem>
+                  {projects.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs text-muted-foreground mb-2 block">Prénom Nom du personnage</Label>
+              <Label className="text-xs text-muted-foreground mb-2 block">Prenom Nom du personnage</Label>
               <Input
                 value={name}
                 onChange={e => setName(e.target.value)}
@@ -101,7 +162,7 @@ export default function CharactersPage() {
               />
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground mb-2 block">Rôle dans la série</Label>
+              <Label className="text-xs text-muted-foreground mb-2 block">Role dans la serie</Label>
               <Input
                 value={role}
                 onChange={e => setRole(e.target.value)}
@@ -111,11 +172,11 @@ export default function CharactersPage() {
             </div>
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground mb-2 block">Contexte de la série (optionnel)</Label>
+            <Label className="text-xs text-muted-foreground mb-2 block">Contexte de la serie (optionnel)</Label>
             <Textarea
               value={context}
               onChange={e => setContext(e.target.value)}
-              placeholder="Colle ici le pitch ou la bible de ta série pour que le personnage soit cohérent..."
+              placeholder="Colle ici le pitch ou la bible de ta serie..."
               className="bg-white/5 border-white/10 min-h-[80px] resize-none"
             />
           </div>
@@ -125,11 +186,16 @@ export default function CharactersPage() {
             className="w-full bg-gradient-to-r from-cyan-500 to-teal-400 hover:opacity-90 text-white font-medium"
           >
             {isGenerating ? (
-              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Génération en cours...</>
+              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Generation en cours...</>
             ) : (
-              <><Wand2 className="w-4 h-4 mr-2" />Générer la fiche personnage</>
+              <><Wand2 className="w-4 h-4 mr-2" />Generer la fiche personnage</>
             )}
           </Button>
+          {saved && (
+            <p className="text-xs text-green-400 flex items-center gap-1">
+              <Check className="w-3 h-3" /> Sauvegarde dans le projet
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -138,7 +204,7 @@ export default function CharactersPage() {
           <CardContent className="p-6">
             <pre className="text-sm text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed max-h-[400px] overflow-y-auto">
               {streamContent}
-              {isGenerating && <span className="animate-pulse text-cyan-400">▋</span>}
+              {isGenerating && <span className="animate-pulse text-cyan-400">&#9611;</span>}
             </pre>
           </CardContent>
         </Card>
@@ -150,7 +216,7 @@ export default function CharactersPage() {
             {characters.length} Personnage{characters.length > 1 ? 's' : ''}
           </span>
           {characters.length === 0 && (
-            <p className="text-sm text-muted-foreground py-4">Aucun personnage créé pour l'instant.</p>
+            <p className="text-sm text-muted-foreground py-4">Aucun personnage cree pour l&apos;instant.</p>
           )}
           {characters.map(char => (
             <div
@@ -189,13 +255,25 @@ export default function CharactersPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{selectedChar.name}</CardTitle>
-                  <button
-                    onClick={() => handleCopy(selectedChar.content)}
-                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors"
-                  >
-                    {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copied ? 'Copié' : 'Copier'}
-                  </button>
+                  <div className="flex items-center gap-3">
+                    {selectedProject && selectedProject !== 'none' && (
+                      <button
+                        onClick={() => saveToProject(selectedChar, selectedProject)}
+                        disabled={saving}
+                        className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleCopy(selectedChar.content)}
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copied ? 'Copie' : 'Copier'}
+                    </button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -208,7 +286,7 @@ export default function CharactersPage() {
             <Card className="border-white/5 bg-white/[0.02] h-full flex items-center justify-center">
               <CardContent className="text-center py-20">
                 <Users className="w-8 h-8 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground text-sm">Génère un personnage ou sélectionnes-en un</p>
+                <p className="text-muted-foreground text-sm">Genere un personnage ou selectionnes-en un</p>
               </CardContent>
             </Card>
           )}
