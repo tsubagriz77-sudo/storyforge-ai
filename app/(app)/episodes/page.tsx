@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { Film, Wand2, RefreshCw, Copy, Check, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Film, Wand2, RefreshCw, Copy, Check, Trash2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Episode {
   id: string;
@@ -15,16 +16,32 @@ interface Episode {
   content: string;
 }
 
+interface Project {
+  id: string;
+  title: string;
+}
+
 export default function EpisodesPage() {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string>('none');
   const [selectedEp, setSelectedEp] = useState<Episode | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamContent, setStreamContent] = useState('');
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [bible, setBible] = useState('');
   const [characters, setCharacters] = useState('');
   const [epNumber, setEpNumber] = useState('1');
   const [epTitle, setEpTitle] = useState('');
+
+  useEffect(() => {
+    fetch('/api/projects')
+      .then(r => r.json())
+      .then(data => setProjects(data))
+      .catch(() => {});
+  }, []);
 
   const handleGenerate = async () => {
     if (!bible) return;
@@ -64,11 +81,39 @@ export default function EpisodesPage() {
       setEpisodes(prev => [...prev, newEp].sort((a, b) => a.number - b.number));
       setSelectedEp(newEp);
       setStreamContent('');
+
+      if (selectedProject && selectedProject !== 'none') {
+        await saveToProject(newEp, selectedProject);
+      }
     } catch (e) {
       setStreamContent('Erreur lors de la generation.');
     }
 
     setIsGenerating(false);
+  };
+
+  const saveToProject = async (ep: Episode, projectId: string) => {
+    setSaving(true);
+    try {
+      await fetch('/api/save-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          table: 'episodes',
+          data: {
+            project_id: projectId,
+            number: ep.number,
+            title: ep.title,
+            content: ep.content,
+          },
+        }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e) {
+      console.error(e);
+    }
+    setSaving(false);
   };
 
   const handleDelete = (id: string) => {
@@ -93,6 +138,22 @@ export default function EpisodesPage() {
 
       <Card className="border-white/5 bg-white/[0.02] mb-8">
         <CardContent className="p-6 space-y-4">
+          {projects.length > 0 && (
+            <div>
+              <Label className="text-xs text-muted-foreground mb-2 block">Sauvegarder dans un projet (optionnel)</Label>
+              <Select value={selectedProject} onValueChange={setSelectedProject}>
+                <SelectTrigger className="bg-white/5 border-white/10">
+                  <SelectValue placeholder="Choisir un projet..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun projet</SelectItem>
+                  {projects.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div>
             <Label className="text-xs text-muted-foreground mb-2 block">Bible de la serie</Label>
             <Textarea
@@ -143,6 +204,11 @@ export default function EpisodesPage() {
               <><Wand2 className="w-4 h-4 mr-2" />Generer le script complet</>
             )}
           </Button>
+          {saved && (
+            <p className="text-xs text-green-400 flex items-center gap-1">
+              <Check className="w-3 h-3" /> Sauvegarde dans le projet
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -202,13 +268,25 @@ export default function EpisodesPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{selectedEp.title}</CardTitle>
-                  <button
-                    onClick={() => handleCopy(selectedEp.content)}
-                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors"
-                  >
-                    {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copied ? 'Copie' : 'Copier'}
-                  </button>
+                  <div className="flex items-center gap-3">
+                    {selectedProject && selectedProject !== 'none' && (
+                      <button
+                        onClick={() => saveToProject(selectedEp, selectedProject)}
+                        disabled={saving}
+                        className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleCopy(selectedEp.content)}
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copied ? 'Copie' : 'Copier'}
+                    </button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
