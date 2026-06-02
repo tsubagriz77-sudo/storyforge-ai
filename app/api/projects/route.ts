@@ -6,10 +6,22 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export async function GET() {
+async function getUserId(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader) return null;
+  const token = authHeader.replace('Bearer ', '');
+  const { data } = await supabase.auth.getUser(token);
+  return data.user?.id || null;
+}
+
+export async function GET(req: NextRequest) {
+  const userId = await getUserId(req);
+  if (!userId) return new Response('Non autorise', { status: 401 });
+
   const { data, error } = await supabase
     .from('projects')
     .select('*')
+    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) return new Response(JSON.stringify({ error }), { status: 500 });
@@ -19,27 +31,14 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const userId = await getUserId(req);
+  if (!userId) return new Response('Non autorise', { status: 401 });
+
   const { title, pitch, bible } = await req.json();
 
   const { data, error } = await supabase
     .from('projects')
-    .insert([{ title, pitch, bible }])
-    .select()
-    .single();
-
-  if (error) return new Response(JSON.stringify({ error }), { status: 500 });
-  return new Response(JSON.stringify(data), {
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
-
-export async function PATCH(req: NextRequest) {
-  const { id, ...updates } = await req.json();
-
-  const { data, error } = await supabase
-    .from('projects')
-    .update(updates)
-    .eq('id', id)
+    .insert([{ title, pitch, bible, user_id: userId }])
     .select()
     .single();
 
@@ -50,12 +49,16 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const userId = await getUserId(req);
+  if (!userId) return new Response('Non autorise', { status: 401 });
+
   const { id } = await req.json();
 
   const { error } = await supabase
     .from('projects')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', userId);
 
   if (error) return new Response(JSON.stringify({ error }), { status: 500 });
   return new Response(JSON.stringify({ success: true }), {
