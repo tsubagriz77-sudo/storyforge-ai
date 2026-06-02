@@ -8,7 +8,18 @@ const supabase = createClient(
 
 const allowedTables = ['characters', 'episodes', 'hooks'];
 
+async function getUserId(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader) return null;
+  const token = authHeader.replace('Bearer ', '');
+  const { data } = await supabase.auth.getUser(token);
+  return data.user?.id || null;
+}
+
 export async function POST(req: NextRequest) {
+  const userId = await getUserId(req);
+  if (!userId) return new Response('Non autorise', { status: 401 });
+
   const { table, data } = await req.json();
 
   if (!allowedTables.includes(table)) {
@@ -17,7 +28,7 @@ export async function POST(req: NextRequest) {
 
   const { data: result, error } = await supabase
     .from(table)
-    .insert([data])
+    .insert([{ ...data, user_id: userId }])
     .select()
     .single();
 
@@ -31,6 +42,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const userId = await getUserId(req);
+  if (!userId) return new Response('Non autorise', { status: 401 });
+
   const { table, id } = await req.json();
 
   if (!allowedTables.includes(table)) {
@@ -40,7 +54,8 @@ export async function DELETE(req: NextRequest) {
   const { error } = await supabase
     .from(table)
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', userId);
 
   if (error) {
     return new Response(JSON.stringify({ error }), { status: 500 });
