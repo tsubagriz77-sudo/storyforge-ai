@@ -13,3 +13,8 @@ export async function getAuthHeaders(): Promise<HeadersInit> {
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
   };
 }
+
+export async function getCurrentUser() {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user || null;
+}
