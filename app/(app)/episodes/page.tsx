@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getAuthHeaders } from '@/hooks/useAuth';
 
 interface Episode {
   id: string;
@@ -37,10 +38,12 @@ export default function EpisodesPage() {
   const [epTitle, setEpTitle] = useState('');
 
   useEffect(() => {
-    fetch('/api/projects')
-      .then(r => r.json())
-      .then(data => setProjects(data))
-      .catch(() => {});
+    getAuthHeaders().then(headers => {
+      fetch('/api/projects', { headers })
+        .then(r => r.json())
+        .then(data => setProjects(Array.isArray(data) ? data : []))
+        .catch(() => {});
+    });
   }, []);
 
   const handleGenerate = async () => {
@@ -95,9 +98,10 @@ export default function EpisodesPage() {
   const saveToProject = async (ep: Episode, projectId: string) => {
     setSaving(true);
     try {
+      const headers = await getAuthHeaders();
       await fetch('/api/save-content', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           table: 'episodes',
           data: {
