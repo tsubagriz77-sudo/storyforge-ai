@@ -65,9 +65,10 @@ export default function ProjectDetailPage() {
 
   const deleteItem = async (table: string, itemId: string) => {
     if (!confirm('Supprimer cet element ?')) return;
+    const headers = await getAuthHeaders();
     await fetch('/api/save-content', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ table, id: itemId }),
     });
     if (table === 'episodes') setEpisodes(prev => prev.filter(e => e.id !== itemId));
