@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { BookOpen, Users, Film, ArrowLeft, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
+import { getAuthHeaders } from '@/hooks/useAuth';
 
 interface Project {
   id: string;
@@ -38,22 +39,28 @@ export default function ProjectDetailPage() {
 
   useEffect(() => {
     if (!id) return;
-    
-    fetch('/api/projects')
-      .then(r => r.json())
-      .then(data => {
-        const p = data.find((p: Project) => p.id === id);
-        setProject(p || null);
-      });
 
-    fetch(`/api/projects/${id}/items`)
-      .then(r => r.json())
-      .then(data => {
-        setEpisodes(data.episodes || []);
-        setCharacters(data.characters || []);
+    const load = async () => {
+      try {
+        const headers = await getAuthHeaders();
+
+        const projectsRes = await fetch('/api/projects', { headers });
+        const projectsData = await projectsRes.json();
+        const p = projectsData.find((p: Project) => p.id === id);
+        setProject(p || null);
+
+        const itemsRes = await fetch(`/api/projects/${id}/items`, { headers });
+        const itemsData = await itemsRes.json();
+        setEpisodes(itemsData.episodes || []);
+        setCharacters(itemsData.characters || []);
+      } catch {
+        // ignore
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+
+    load();
   }, [id]);
 
   const deleteItem = async (table: string, itemId: string) => {
