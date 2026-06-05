@@ -1,18 +1,29 @@
 import { NextRequest } from 'next/server';
-import { supabase } from '@/lib/supabase-client';
+import { createClient } from '@supabase/supabase-js';
 
 const allowedTables = ['characters', 'episodes', 'hooks'];
 
+function getSupabase(token?: string) {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    token ? {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    } : {}
+  );
+}
+
 async function getUserId(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
-  if (!authHeader) return null;
+  if (!authHeader) return { userId: null, supabase: getSupabase() };
   const token = authHeader.replace('Bearer ', '');
-  const { data } = await supabase.auth.getUser(token);
-  return data.user?.id || null;
+  const supabase = getSupabase(token);
+  const { data } = await supabase.auth.getUser();
+  return { userId: data.user?.id || null, supabase };
 }
 
 export async function POST(req: NextRequest) {
-  const userId = await getUserId(req);
+  const { userId, supabase } = await getUserId(req);
   if (!userId) return new Response('Non autorise', { status: 401 });
 
   const { table, data } = await req.json();
@@ -37,7 +48,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const userId = await getUserId(req);
+  const { userId, supabase } = await getUserId(req);
   if (!userId) return new Response('Non autorise', { status: 401 });
 
   const { table, id } = await req.json();

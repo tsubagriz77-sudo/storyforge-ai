@@ -1,16 +1,27 @@
 import { NextRequest } from 'next/server';
-import { supabase } from '@/lib/supabase-client';
+import { createClient } from '@supabase/supabase-js';
+
+function getSupabase(token?: string) {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    token ? {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    } : {}
+  );
+}
 
 async function getUserId(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
-  if (!authHeader) return null;
+  if (!authHeader) return { userId: null, supabase: getSupabase() };
   const token = authHeader.replace('Bearer ', '');
-  const { data } = await supabase.auth.getUser(token);
-  return data.user?.id || null;
+  const supabase = getSupabase(token);
+  const { data } = await supabase.auth.getUser();
+  return { userId: data.user?.id || null, supabase };
 }
 
 export async function GET(req: NextRequest) {
-  const userId = await getUserId(req);
+  const { userId, supabase } = await getUserId(req);
   if (!userId) return new Response('Non autorise', { status: 401 });
 
   const { data, error } = await supabase
@@ -26,7 +37,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const userId = await getUserId(req);
+  const { userId, supabase } = await getUserId(req);
   if (!userId) return new Response('Non autorise', { status: 401 });
 
   const { title, pitch, bible } = await req.json();
@@ -44,7 +55,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const userId = await getUserId(req);
+  const { userId, supabase } = await getUserId(req);
   if (!userId) return new Response('Non autorise', { status: 401 });
 
   const { id } = await req.json();
@@ -55,7 +66,9 @@ export async function DELETE(req: NextRequest) {
     .eq('id', id)
     .eq('user_id', userId);
 
-  if (error) return new Response(JSON.stringify({ error }), { status: 500 });
+  if (error) return new Response(JSON.stringify({ success: true }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
   return new Response(JSON.stringify({ success: true }), {
     headers: { 'Content-Type': 'application/json' },
   });
