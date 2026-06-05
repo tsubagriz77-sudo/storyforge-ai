@@ -24,16 +24,16 @@ interface Project {
   title: string;
 }
 
-const genres = ['Drame', 'Thriller', 'Sci-Fi', 'Fantasy', 'Romance', 'Horreur', 'Comedie', 'Action'];
-const tones = ['Sombre', 'Leger', 'Suspense', 'Emotionnel', 'Epique', 'Intime'];
-const audiences = ['Gen Z', 'Millennials', 'Ados', 'Fans anime', 'Grand public'];
+const genres = ['Drama', 'Thriller', 'Sci-Fi', 'Fantasy', 'Romance', 'Horror', 'Comedy', 'Action'];
+const tones = ['Dark', 'Light', 'Suspense', 'Emotional', 'Epic', 'Intimate'];
+const audiences = ['Gen Z', 'Millennials', 'Teens', 'Animation fans', 'General audience'];
 
 export default function StoriesPage() {
   const [stories, setStories] = useState<Story[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('none');
-  const [genre, setGenre] = useState('Drame');
-  const [tone, setTone] = useState('Sombre');
+  const [genre, setGenre] = useState('Drama');
+  const [tone, setTone] = useState('Dark');
   const [audience, setAudience] = useState('Gen Z');
   const [pitch, setPitch] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -64,7 +64,7 @@ export default function StoriesPage() {
         body: JSON.stringify({ pitch, genre, tone, audience }),
       });
 
-      if (!response.ok) throw new Error('Erreur API');
+      if (!response.ok) throw new Error('API error');
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -100,7 +100,7 @@ export default function StoriesPage() {
         await saveToProject(newStory, selectedProject);
       }
     } catch (e) {
-      setStreamContent('Erreur lors de la generation.');
+      setStreamContent('Generation failed.');
     }
 
     setIsGenerating(false);
@@ -145,21 +145,21 @@ export default function StoriesPage() {
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Generateur de Series</h1>
-        <p className="text-muted-foreground text-sm mt-1">Genere une bible complete pour ta mini-serie TikTok.</p>
+        <h1 className="text-2xl font-bold tracking-tight">Series Generator</h1>
+        <p className="text-muted-foreground text-sm mt-1">Generate a complete bible for your short-form series.</p>
       </div>
 
       <Card className="border-white/5 bg-white/[0.02] mb-8">
         <CardContent className="p-6 space-y-4">
           {projects.length > 0 && (
             <div>
-              <Label className="text-xs text-muted-foreground mb-2 block">Sauvegarder dans un projet (optionnel)</Label>
+              <Label className="text-xs text-muted-foreground mb-2 block">Save to project (optional)</Label>
               <Select value={selectedProject} onValueChange={setSelectedProject}>
                 <SelectTrigger className="bg-white/5 border-white/10">
-                  <SelectValue placeholder="Choisir un projet..." />
+                  <SelectValue placeholder="Choose a project..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Aucun projet</SelectItem>
+                  <SelectItem value="none">No project</SelectItem>
                   {projects.map(p => (
                     <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
                   ))}
@@ -168,11 +168,11 @@ export default function StoriesPage() {
             </div>
           )}
           <div>
-            <Label className="text-xs text-muted-foreground mb-2 block">Pitch de ta serie</Label>
+            <Label className="text-xs text-muted-foreground mb-2 block">Series pitch</Label>
             <Textarea
               value={pitch}
               onChange={e => setPitch(e.target.value)}
-              placeholder="Ex : Deux ados dont les familles se haissent depuis 30 ans..."
+              placeholder="e.g. Two teens fall in love without knowing their families have hated each other for 30 years..."
               className="bg-white/5 border-white/10 min-h-[100px] resize-none"
             />
           </div>
@@ -189,7 +189,7 @@ export default function StoriesPage() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground mb-2 block">Ton</Label>
+              <Label className="text-xs text-muted-foreground mb-2 block">Tone</Label>
               <Select value={tone} onValueChange={setTone}>
                 <SelectTrigger className="bg-white/5 border-white/10">
                   <SelectValue />
@@ -217,14 +217,14 @@ export default function StoriesPage() {
             className="w-full bg-gradient-to-r from-cyan-500 to-teal-400 hover:opacity-90 text-white font-medium"
           >
             {isGenerating ? (
-              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Generation en cours...</>
+              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Generating...</>
             ) : (
-              <><Wand2 className="w-4 h-4 mr-2" />Generer la bible complete</>
+              <><Wand2 className="w-4 h-4 mr-2" />Generate full bible</>
             )}
           </Button>
           {saved && (
             <p className="text-xs text-green-400 flex items-center gap-1">
-              <Check className="w-3 h-3" /> Sauvegarde dans le projet
+              <Check className="w-3 h-3" /> Saved to project
             </p>
           )}
         </CardContent>
@@ -244,10 +244,10 @@ export default function StoriesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-3">
           <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-            {stories.length} Serie{stories.length > 1 ? 's' : ''}
+            {stories.length} series
           </span>
           {stories.length === 0 && (
-            <p className="text-sm text-muted-foreground py-4">Aucune serie generee pour l&apos;instant.</p>
+            <p className="text-sm text-muted-foreground py-4">No series generated yet.</p>
           )}
           {stories.map(story => (
             <div
@@ -297,7 +297,7 @@ export default function StoriesPage() {
                         className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
                       >
                         <Save className="w-3.5 h-3.5" />
-                        {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                        {saving ? 'Saving...' : 'Save'}
                       </button>
                     )}
                     <button
@@ -305,7 +305,7 @@ export default function StoriesPage() {
                       className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors"
                     >
                       {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      {copied ? 'Copie' : 'Copier'}
+                      {copied ? 'Copied' : 'Copy'}
                     </button>
                   </div>
                 </div>
@@ -320,7 +320,7 @@ export default function StoriesPage() {
             <Card className="border-white/5 bg-white/[0.02] h-full flex items-center justify-center">
               <CardContent className="text-center py-20">
                 <BookOpen className="w-8 h-8 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground text-sm">Genere une serie ou selectionnes-en une</p>
+                <p className="text-muted-foreground text-sm">Generate a series or select one</p>
               </CardContent>
             </Card>
           )}

@@ -57,7 +57,7 @@ export default function CharactersPage() {
         body: JSON.stringify({ name, role, context }),
       });
 
-      if (!response.ok) throw new Error('Erreur API');
+      if (!response.ok) throw new Error('API error');
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -88,7 +88,7 @@ export default function CharactersPage() {
         await saveToProject(newChar, selectedProject);
       }
     } catch (e) {
-      setStreamContent('Erreur lors de la generation.');
+      setStreamContent('Generation failed.');
     }
 
     setIsGenerating(false);
@@ -133,21 +133,21 @@ export default function CharactersPage() {
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Generateur de Personnages</h1>
-        <p className="text-muted-foreground text-sm mt-1">Cree des fiches personnages detaillees pour ta serie anime.</p>
+        <h1 className="text-2xl font-bold tracking-tight">Character Generator</h1>
+        <p className="text-muted-foreground text-sm mt-1">Create detailed character sheets for your series.</p>
       </div>
 
       <Card className="border-white/5 bg-white/[0.02] mb-8">
         <CardContent className="p-6 space-y-4">
           {projects.length > 0 && (
             <div>
-              <Label className="text-xs text-muted-foreground mb-2 block">Sauvegarder dans un projet (optionnel)</Label>
+              <Label className="text-xs text-muted-foreground mb-2 block">Save to project (optional)</Label>
               <Select value={selectedProject} onValueChange={setSelectedProject}>
                 <SelectTrigger className="bg-white/5 border-white/10">
-                  <SelectValue placeholder="Choisir un projet..." />
+                  <SelectValue placeholder="Choose a project..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Aucun projet</SelectItem>
+                  <SelectItem value="none">No project</SelectItem>
                   {projects.map(p => (
                     <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
                   ))}
@@ -157,30 +157,30 @@ export default function CharactersPage() {
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs text-muted-foreground mb-2 block">Prenom Nom du personnage</Label>
+              <Label className="text-xs text-muted-foreground mb-2 block">Character name</Label>
               <Input
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="Ex : Diego Vasquez"
+                placeholder="e.g. Diego Vasquez"
                 className="bg-white/5 border-white/10"
               />
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground mb-2 block">Role dans la serie</Label>
+              <Label className="text-xs text-muted-foreground mb-2 block">Role in the series</Label>
               <Input
                 value={role}
                 onChange={e => setRole(e.target.value)}
-                placeholder="Ex : Protagoniste, 17 ans"
+                placeholder="e.g. Protagonist, age 17"
                 className="bg-white/5 border-white/10"
               />
             </div>
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground mb-2 block">Contexte de la serie (optionnel)</Label>
+            <Label className="text-xs text-muted-foreground mb-2 block">Series context (optional)</Label>
             <Textarea
               value={context}
               onChange={e => setContext(e.target.value)}
-              placeholder="Colle ici le pitch ou la bible de ta serie..."
+              placeholder="Paste your pitch or series bible here..."
               className="bg-white/5 border-white/10 min-h-[80px] resize-none"
             />
           </div>
@@ -190,14 +190,14 @@ export default function CharactersPage() {
             className="w-full bg-gradient-to-r from-cyan-500 to-teal-400 hover:opacity-90 text-white font-medium"
           >
             {isGenerating ? (
-              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Generation en cours...</>
+              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Generating...</>
             ) : (
-              <><Wand2 className="w-4 h-4 mr-2" />Generer la fiche personnage</>
+              <><Wand2 className="w-4 h-4 mr-2" />Generate character sheet</>
             )}
           </Button>
           {saved && (
             <p className="text-xs text-green-400 flex items-center gap-1">
-              <Check className="w-3 h-3" /> Sauvegarde dans le projet
+              <Check className="w-3 h-3" /> Saved to project
             </p>
           )}
         </CardContent>
@@ -217,10 +217,10 @@ export default function CharactersPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-3">
           <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-            {characters.length} Personnage{characters.length > 1 ? 's' : ''}
+            {characters.length} {characters.length === 1 ? 'character' : 'characters'}
           </span>
           {characters.length === 0 && (
-            <p className="text-sm text-muted-foreground py-4">Aucun personnage cree pour l&apos;instant.</p>
+            <p className="text-sm text-muted-foreground py-4">No characters created yet.</p>
           )}
           {characters.map(char => (
             <div
@@ -267,7 +267,7 @@ export default function CharactersPage() {
                         className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
                       >
                         <Save className="w-3.5 h-3.5" />
-                        {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                        {saving ? 'Saving...' : 'Save'}
                       </button>
                     )}
                     <button
@@ -275,7 +275,7 @@ export default function CharactersPage() {
                       className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors"
                     >
                       {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      {copied ? 'Copie' : 'Copier'}
+                      {copied ? 'Copied' : 'Copy'}
                     </button>
                   </div>
                 </div>
@@ -290,7 +290,7 @@ export default function CharactersPage() {
             <Card className="border-white/5 bg-white/[0.02] h-full flex items-center justify-center">
               <CardContent className="text-center py-20">
                 <Users className="w-8 h-8 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground text-sm">Genere un personnage ou selectionnes-en un</p>
+                <p className="text-muted-foreground text-sm">Generate a character or select one</p>
               </CardContent>
             </Card>
           )}

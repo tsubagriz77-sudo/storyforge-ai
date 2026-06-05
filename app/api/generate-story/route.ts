@@ -8,38 +8,38 @@ export async function POST(req: NextRequest) {
     return new Response('Clé API manquante', { status: 500 });
   }
 
-  const prompt = `Tu es un scénariste expert en mini-séries TikTok anime style.
+  const prompt = `You are an expert screenwriter for short-form vertical video series (TikTok, Reels, etc.).
 
-Génère une bible de série complète pour ce pitch : "${pitch}"
+Generate a complete series bible for this pitch: "${pitch}"
 
-Paramètres :
-- Genre : ${genre}
-- Ton : ${tone}
-- Audience cible : ${audience}
+Parameters:
+- Genre: ${genre}
+- Tone: ${tone}
+- Target audience: ${audience}
 
-Structure ta réponse ainsi :
+Structure your response as follows:
 
-## [TITRE DE LA SÉRIE]
+## [SERIES TITLE]
 
-**Tagline :** Une phrase accrocheuse
+**Tagline:** One catchy sentence
 
-**Pitch :** 3 lignes maximum
+**Pitch:** 3 lines maximum
 
-**Univers & Setting :** Description de l'univers
+**World & Setting:** Description of the universe
 
-**Personnages principaux :**
-Liste 4-5 personnages avec leur rôle et arc narratif
+**Main characters:**
+List 4-5 characters with their role and narrative arc
 
-**Structure en 10 épisodes :**
-Pour chaque épisode : numéro, titre, résumé en 2 lignes, cliffhanger
+**10-episode structure:**
+For each episode: number, title, 2-line summary, cliffhanger
 
-**Twist de mi-saison :** (épisode 5)
+**Mid-season twist:** (episode 5)
 
-**Révélation finale :** (épisode 10)
+**Final revelation:** (episode 10)
 
-**Style visuel anime :** Description du style graphique recommandé
+**Recommended visual style:** Describe the look and feel (anime, realistic, cinematic, stylized 3D, etc.) — match what fits the story; do not default to anime unless it serves the pitch.
 
-Réponds uniquement en français. Sois cinématographique et émotionnel.`;
+Respond only in English. Be cinematic and emotional.`;
 
   const response = await fetch(
     'https://api.groq.com/openai/v1/chat/completions',

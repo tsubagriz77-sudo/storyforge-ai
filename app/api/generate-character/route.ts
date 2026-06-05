@@ -8,62 +8,62 @@ export async function POST(req: NextRequest) {
     return new Response('Clé API manquante', { status: 500 });
   }
 
-  const prompt = `Tu es un directeur artistique expert en anime japonais et en production IA vidéo. Reponds toujours en francais avec des phrases completes, sans jamais tronquer les mots.
+  const prompt = `You are an expert art director for AI video production (any visual style: anime, realistic, cinematic, stylized, etc.). Always respond in English with complete sentences; never truncate words.
 
-Cree une fiche personnage complete et ultra-detaillee pour ce personnage :
-- Nom : ${name}
-- Role : ${role || 'personnage principal'}
-${context ? `- Contexte de la serie : ${context}` : ''}
+Create a complete, ultra-detailed character sheet for:
+- Name: ${name}
+- Role: ${role || 'main character'}
+${context ? `- Series context: ${context}` : ''}
 
-IMPORTANT : Invente tous les details manquants de facon coherente avec le nom et le role. Sois tres precis et concret.
+IMPORTANT: Invent any missing details in a way that is coherent with the name and role. Be very specific and concrete. Infer the best visual style from the series context when provided; otherwise keep the look versatile (not locked to anime).
 
-Reponds exactement dans ce format :
+Respond exactly in this format:
 
 ## ${name}
 
-**Age :** [nombre precis]
-**Taille :** [en cm]
-**Poids :** [en kg]
-**Anniversaire :** [jour et mois]
-**Nationalite :** [pays]
+**Age:** [exact number]
+**Height:** [in cm]
+**Weight:** [in kg]
+**Birthday:** [day and month]
+**Nationality:** [country]
 
 ---
 
-### PERSONNALITE
-[5 traits de caractere detailles, 2-3 phrases chacun]
+### PERSONALITY
+[5 detailed character traits, 2-3 sentences each]
 
-### APPARENCE PHYSIQUE
-- **Peau :** [description precise + teinte]
-- **Cheveux :** [couleur, longueur, coiffure] — Code hex : #[code]
-- **Yeux :** [couleur, forme, expression] — Code hex : #[code]
-- **Morphologie :** [corpulence, taille, posture]
-- **Expression habituelle :** [description]
+### PHYSICAL APPEARANCE
+- **Skin:** [precise description + tone]
+- **Hair:** [color, length, style] — Hex: #[code]
+- **Eyes:** [color, shape, expression] — Hex: #[code]
+- **Build:** [body type, height, posture]
+- **Usual expression:** [description]
 
-### PALETTE DE COULEURS
-1. #[code] — [nom de la couleur] ([usage : vetements/peau/cheveux])
-2. #[code] — [nom de la couleur] ([usage])
-3. #[code] — [nom de la couleur] ([usage])
-4. #[code] — [nom de la couleur] ([usage])
-5. #[code] — [nom de la couleur] ([usage])
+### COLOR PALETTE
+1. #[code] — [color name] ([usage: clothing/skin/hair])
+2. #[code] — [color name] ([usage])
+3. #[code] — [color name] ([usage])
+4. #[code] — [color name] ([usage])
+5. #[code] — [color name] ([usage])
 
-### TENUE SIGNATURE
-[Description precise et detaillee des vetements, couleurs exactes, accessoires, chaussures]
+### SIGNATURE OUTFIT
+[Precise, detailed description of clothing, exact colors, accessories, shoes]
 
-### ARC NARRATIF
-[Evolution du personnage sur la saison en 3-4 phrases]
+### NARRATIVE ARC
+[Character evolution over the season in 3-4 sentences]
 
-### PROMPT IMAGE GOOGLE FLOW
-[Prompt en anglais, pret a coller dans Google Flow/Veo. Format : "High-quality 2D anime style, Kuroko no Basket aesthetic, character sheet of [nom], [description physique complete en anglais], front view, side view, back view, full body, [couleurs], white background, professional anime production quality"]
+### GOOGLE FLOW IMAGE PROMPT
+[English prompt ready to paste into Google Flow/Veo. Start with a style prefix that matches the character and series (anime, photorealistic, cinematic, etc.) — do not default to anime unless context requires it. Include: character sheet of [name], full physical description, front/side/back views, full body, colors, white background, production-quality wording for the chosen style]
 
 ### LIP SYNC
-- Son "A" : [description mouvement levres]
-- Son "E" : [description]
-- Son "I" : [description]
-- Son "O" : [description]
-- Son "U" : [description]
-- Consonne "P/B" : [description]
-- Consonne "M" : [description]
-- Consonne "T/D" : [description]`;
+- "A" sound: [lip movement description]
+- "E" sound: [description]
+- "I" sound: [description]
+- "O" sound: [description]
+- "U" sound: [description]
+- "P/B" consonant: [description]
+- "M" consonant: [description]
+- "T/D" consonant: [description]`;
 
   const response = await fetch(
     'https://api.groq.com/openai/v1/chat/completions',

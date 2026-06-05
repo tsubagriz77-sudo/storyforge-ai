@@ -19,9 +19,9 @@ const hookTypes = [
   { id: 'opening', label: 'Opening Hook', icon: Target },
   { id: 'cliffhanger', label: 'Cliffhanger', icon: Flame },
   { id: 'plot_twist', label: 'Plot Twist', icon: TrendingUp },
-  { id: 'emotional', label: 'Émotionnel', icon: Sparkles },
-  { id: 'curiosity_gap', label: 'Curiosité', icon: Eye },
-  { id: 'controversy', label: 'Controverse', icon: Zap },
+  { id: 'emotional', label: 'Emotional', icon: Sparkles },
+  { id: 'curiosity_gap', label: 'Curiosity', icon: Eye },
+  { id: 'controversy', label: 'Controversy', icon: Zap },
 ];
 
 export default function HooksPage() {
@@ -41,7 +41,7 @@ export default function HooksPage() {
         body: JSON.stringify({ hookType, context }),
       });
 
-      if (!response.ok) throw new Error('Erreur API');
+      if (!response.ok) throw new Error('API error');
 
       const data = await response.json();
       const newHooks = data.hooks.map((content: string, i: number) => ({
@@ -66,23 +66,23 @@ export default function HooksPage() {
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Hooks TikTok Viraux</h1>
-        <p className="text-muted-foreground text-sm mt-1">Génère des accroches irrésistibles pour stopper le scroll.</p>
+        <h1 className="text-2xl font-bold tracking-tight">Viral TikTok Hooks</h1>
+        <p className="text-muted-foreground text-sm mt-1">Generate irresistible hooks that stop the scroll.</p>
       </div>
 
       <Card className="border-white/5 bg-white/[0.02] mb-8">
         <CardContent className="p-6 space-y-4">
           <div>
-            <Label className="text-xs text-muted-foreground mb-2 block">Contexte de ta série (optionnel)</Label>
+            <Label className="text-xs text-muted-foreground mb-2 block">Series context (optional)</Label>
             <Textarea
               value={context}
               onChange={e => setContext(e.target.value)}
-              placeholder="Ex : Deux ados tombent amoureux sans savoir que leurs familles se détestent..."
+              placeholder="e.g. Two teens fall in love without knowing their families hate each other..."
               className="bg-white/5 border-white/10 min-h-[80px] resize-none"
             />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground mb-3 block">Type de hook</Label>
+            <Label className="text-xs text-muted-foreground mb-3 block">Hook type</Label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {hookTypes.map(({ id, label, icon: Icon }) => (
                 <div
@@ -108,9 +108,9 @@ export default function HooksPage() {
             className="w-full bg-gradient-to-r from-cyan-500 to-teal-400 hover:opacity-90 text-white font-medium"
           >
             {isGenerating ? (
-              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Génération en cours...</>
+              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Generating...</>
             ) : (
-              <><Wand2 className="w-4 h-4 mr-2" />Générer 5 hooks</>
+              <><Wand2 className="w-4 h-4 mr-2" />Generate 5 hooks</>
             )}
           </Button>
         </CardContent>
@@ -138,7 +138,7 @@ export default function HooksPage() {
         <Card className="border-white/5 bg-white/[0.02]">
           <CardContent className="text-center py-20">
             <Zap className="w-8 h-8 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground text-sm">Sélectionne un type de hook et génère</p>
+            <p className="text-muted-foreground text-sm">Select a hook type and generate</p>
           </CardContent>
         </Card>
       )}

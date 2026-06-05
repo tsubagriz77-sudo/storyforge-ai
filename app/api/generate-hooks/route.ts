@@ -9,27 +9,28 @@ export async function POST(req: NextRequest) {
   }
 
   const hookTypeLabels: Record<string, string> = {
-    opening: 'accroche d\'ouverture (les 3 premières secondes qui stoppent le scroll)',
-    cliffhanger: 'cliffhanger (fin qui donne envie de voir la suite)',
-    plot_twist: 'retournement de situation inattendu',
-    emotional: 'hook émotionnel (qui touche le cœur)',
-    curiosity_gap: 'gap de curiosité (qui crée une question irrésistible)',
-    controversy: 'hook controversé (opinion choc qui divise)',
+    opening: 'opening hook (first 3 seconds that stop the scroll)',
+    cliffhanger: 'cliffhanger (ending that makes viewers want more)',
+    plot_twist: 'unexpected plot twist',
+    emotional: 'emotional hook (hits the heart)',
+    curiosity_gap: 'curiosity gap (creates an irresistible question)',
+    controversy: 'controversial hook (bold opinion that divides)',
   };
 
-  const prompt = `Tu es un expert en création de contenu viral TikTok pour des mini-séries animées.
+  const prompt = `You are an expert in viral short-form video content for vertical mini-series (any visual style: anime, realistic, cinematic, etc.).
 
-Génère exactement 5 hooks de type "${hookTypeLabels[hookType] || hookType}" pour une mini-série TikTok.
-${context ? `\nContexte de la série : ${context}` : ''}
+Generate exactly 5 hooks of type "${hookTypeLabels[hookType] || hookType}" for a vertical mini-series.
+${context ? `\nSeries context: ${context}` : ''}
 
-Règles :
-- Chaque hook doit faire maximum 2-3 phrases
-- Écris en français
-- Style percutant, émotionnel, cinématographique
-- Adapté au format vertical TikTok
-- Chaque hook doit donner envie de regarder la suite immédiatement
+Rules:
+- Each hook must be 2-3 sentences maximum
+- Write in English only
+- Punchy, emotional, cinematic tone
+- Suited to vertical TikTok/Reels format
+- Each hook must make viewers want to keep watching immediately
+- Do not assume anime style unless the context specifies it
 
-Réponds UNIQUEMENT avec un JSON valide dans ce format exact, sans markdown ni backticks :
+Respond ONLY with valid JSON in this exact format, no markdown or backticks:
 {"hooks":["hook 1","hook 2","hook 3","hook 4","hook 5"]}`;
 
   const response = await fetch(

@@ -8,37 +8,37 @@ export async function POST(req: NextRequest) {
     return new Response('Clé API manquante', { status: 500 });
   }
 
-  const prompt = `Tu es un scénariste expert en mini-séries animées TikTok.
+  const prompt = `You are an expert screenwriter for short-form vertical video series (TikTok, Reels, etc.). Visual style may be anime, realistic, cinematic, or any other look — follow the series bible; do not impose anime.
 
-Bible de la série :
+Series bible:
 ${bible}
 
-${characters ? `Personnages :\n${characters}\n` : ''}
+${characters ? `Characters:\n${characters}\n` : ''}
 
-Génère le script complet de l'ÉPISODE ${epNumber}${epTitle ? ` — "${epTitle}"` : ''}.
+Write the full script for EPISODE ${epNumber}${epTitle ? ` — "${epTitle}"` : ''}.
 
-Format : 10 à 12 clips de 6 secondes chacun. Pour chaque clip :
+Format: 10 to 12 clips of 6 seconds each. For each clip:
 
-### CLIP [numéro] — [TYPE]
-**Timecode :** 00:00 → 00:06
-**Type :** SCÈNE / DIAL / VO / SFX
-**Description visuelle :** Description précise de la scène (décor, lumière, angle caméra, personnages)
-**Dialogue :** [NOM PERSONNAGE] : "texte exact"
-**VO :** texte de voix off si applicable
-**Émotion :** émotion dominante de la scène
+### CLIP [number] — [TYPE]
+**Timecode:** 00:00 → 00:06
+**Type:** SCENE / DIAL / VO / SFX
+**Visual description:** Precise scene description (set, lighting, camera angle, characters) — match the visual style from the bible
+**Dialogue:** [CHARACTER NAME]: "exact line"
+**VO:** voice-over text if applicable
+**Emotion:** dominant emotion of the scene
 
 ---
 
-Termine par :
+End with:
 
-### CLIFFHANGER FINAL
-Description du cliffhanger qui donne envie de voir l'épisode suivant.
+### FINAL CLIFFHANGER
+Description of the cliffhanger that makes viewers want the next episode.
 
-### RÉSUMÉ
-Résumé en 2 lignes de l'épisode.
+### SUMMARY
+2-line episode summary.
 
-Style : dialogues percutants, tension constante, visuels anime cinématographiques. Total visé : 65-70 secondes.
-Réponds uniquement en français.`;
+Style: punchy dialogue, constant tension, cinematic visuals appropriate to the series look. Target total: 65-70 seconds.
+Respond only in English.`;
 
   const response = await fetch(
     'https://api.groq.com/openai/v1/chat/completions',

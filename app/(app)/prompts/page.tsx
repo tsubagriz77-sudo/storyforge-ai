@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Video, Wand2, RefreshCw, Copy, Check, Film, Camera } from 'lucide-react';
+import { Video, Wand2, RefreshCw, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -16,19 +16,21 @@ interface VideoPrompt {
   prompt: string;
 }
 
-const sceneTypes = [
-  'Intro personnage', 'Scène de dialogue', 'Scène d\'action',
-  'Moment émotionnel', 'Révélation', 'Cliffhanger', 'Transition',
-];
-
-const animeStyles = [
-  'Anime Kuroko no Basket', 'Anime Shonen', 'Anime Seinen', 'Anime Romance',
+const visualStyles = [
+  'Anime',
+  'Realistic',
+  'Cinematic',
+  'Dark Fantasy',
+  'Sci-Fi',
+  'Watercolor',
+  'Comic Book',
+  'Studio Ghibli',
 ];
 
 export default function PromptsPage() {
   const [script, setScript] = useState('');
   const [characterDesc, setCharacterDesc] = useState('');
-  const [animeStyle, setAnimeStyle] = useState('Anime Kuroko no Basket');
+  const [visualStyle, setVisualStyle] = useState('Anime');
   const [isGenerating, setIsGenerating] = useState(false);
   const [prompts, setPrompts] = useState<VideoPrompt[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -44,10 +46,10 @@ export default function PromptsPage() {
       const response = await fetch('/api/generate-prompts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ script, characterDesc, animeStyle }),
+        body: JSON.stringify({ script, characterDesc, style: visualStyle }),
       });
 
-      if (!response.ok) throw new Error('Erreur API');
+      if (!response.ok) throw new Error('API error');
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -63,12 +65,11 @@ export default function PromptsPage() {
         }
       }
 
-      // Parse les prompts depuis le contenu généré
       const clipMatches = fullContent.split(/(?=###\s*CLIP\s*\d+)/i).filter(s => s.trim());
       const parsedPrompts = clipMatches.map((clip, i) => ({
         id: Date.now().toString() + i,
         clipNumber: i + 1,
-        scene: clip.match(/\*\*Scène\s*:\*\*\s*(.+)/i)?.[1]?.trim() || `Clip ${i + 1}`,
+        scene: clip.match(/\*\*Scene:\*\*\s*(.+)/i)?.[1]?.trim() || `Clip ${i + 1}`,
         prompt: clip,
       }));
 
@@ -77,7 +78,7 @@ export default function PromptsPage() {
         setStreamContent('');
       }
     } catch (e) {
-      setStreamContent('Erreur lors de la génération.');
+      setStreamContent('Generation failed.');
     }
 
     setIsGenerating(false);
@@ -97,38 +98,38 @@ export default function PromptsPage() {
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Prompts Vidéo IA</h1>
-        <p className="text-muted-foreground text-sm mt-1">Génère des prompts précis pour Google Flow / Veo avec lip sync.</p>
+        <h1 className="text-2xl font-bold tracking-tight">AI Video Prompts</h1>
+        <p className="text-muted-foreground text-sm mt-1">Generate precise prompts for Google Flow / Veo with lip sync.</p>
       </div>
 
       <Card className="border-white/5 bg-white/[0.02] mb-8">
         <CardContent className="p-6 space-y-4">
           <div>
-            <Label className="text-xs text-muted-foreground mb-2 block">Script de l'épisode</Label>
+            <Label className="text-xs text-muted-foreground mb-2 block">Episode script</Label>
             <Textarea
               value={script}
               onChange={e => setScript(e.target.value)}
-              placeholder="Colle ici le script de ton épisode (clips numérotés, dialogues, descriptions de scènes)..."
+              placeholder="Paste your episode script here (numbered clips, dialogue, scene descriptions)..."
               className="bg-white/5 border-white/10 min-h-[150px] resize-none"
             />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground mb-2 block">Description des personnages (optionnel)</Label>
+            <Label className="text-xs text-muted-foreground mb-2 block">Character descriptions (optional)</Label>
             <Textarea
               value={characterDesc}
               onChange={e => setCharacterDesc(e.target.value)}
-              placeholder="Colle ici les fiches personnages pour assurer la cohérence visuelle..."
+              placeholder="Paste character sheets here for visual consistency..."
               className="bg-white/5 border-white/10 min-h-[80px] resize-none"
             />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground mb-2 block">Style anime</Label>
-            <Select value={animeStyle} onValueChange={setAnimeStyle}>
+            <Label className="text-xs text-muted-foreground mb-2 block">Visual Style</Label>
+            <Select value={visualStyle} onValueChange={setVisualStyle}>
               <SelectTrigger className="bg-white/5 border-white/10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {animeStyles.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                {visualStyles.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -138,9 +139,9 @@ export default function PromptsPage() {
             className="w-full bg-gradient-to-r from-cyan-500 to-teal-400 hover:opacity-90 text-white font-medium"
           >
             {isGenerating ? (
-              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Génération en cours...</>
+              <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Generating...</>
             ) : (
-              <><Wand2 className="w-4 h-4 mr-2" />Générer les prompts Flow</>
+              <><Wand2 className="w-4 h-4 mr-2" />Generate Flow prompts</>
             )}
           </Button>
         </CardContent>
@@ -161,13 +162,13 @@ export default function PromptsPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-              {prompts.length} Prompts générés
+              {prompts.length} prompts generated
             </span>
             <button
               onClick={copyAll}
               className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors"
             >
-              <Copy className="w-3.5 h-3.5" /> Tout copier
+              <Copy className="w-3.5 h-3.5" /> Copy all
             </button>
           </div>
           {prompts.map(prompt => (
@@ -197,7 +198,7 @@ export default function PromptsPage() {
         <Card className="border-white/5 bg-white/[0.02]">
           <CardContent className="text-center py-20">
             <Video className="w-8 h-8 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground text-sm">Colle un script et génère les prompts Flow</p>
+            <p className="text-muted-foreground text-sm">Paste a script and generate Flow prompts</p>
           </CardContent>
         </Card>
       )}

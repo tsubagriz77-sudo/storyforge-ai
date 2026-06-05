@@ -1,41 +1,48 @@
 import { NextRequest } from 'next/server';
 
 export async function POST(req: NextRequest) {
-  const { script, characterDesc, animeStyle } = await req.json();
+  const { script, characterDesc, style, animeStyle } = await req.json();
+  const visualStyle = style || animeStyle || 'Anime';
 
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return new Response('Clé API manquante', { status: 500 });
   }
 
-  const prompt = `Tu es un expert en direction artistique IA et génération vidéo anime.
+  const prompt = `You are an expert in AI art direction and video generation for Google Flow / Veo (any visual style: anime, realistic, cinematic, stylized 3D, etc.).
 
-Style anime à utiliser : ${animeStyle}
-Style prefix universel : "High-quality 2D anime style, ${animeStyle} aesthetic, crisp clean line art, cel-shading, flat color fills, sharp shadow edges, cinematic anime composition, dramatic lighting, no photorealism, no 3D render, Japanese TV anime quality, 1080p vertical format (9:16)."
+User-chosen visual style: ${visualStyle}
 
-${characterDesc ? `Descriptions visuelles des personnages :\n${characterDesc}\n` : ''}
+Build a dedicated style prefix for EACH clip that faithfully matches "${visualStyle}" — do not use a generic anime prefix unless the chosen style is anime. Examples:
+- Anime / 2D: line art, cel-shading, flat colors, anime composition, etc.
+- Realistic / cinematic: photorealistic, film grain, lens, natural lighting, depth of field, etc.
+- Other styles: use terminology appropriate to that look.
 
-Script de l'épisode :
+Always end the style prefix with: 1080p vertical format (9:16).
+
+${characterDesc ? `Character visual descriptions:\n${characterDesc}\n` : ''}
+
+Episode script:
 ${script}
 
-Pour chaque clip du script, génère un prompt complet pour Google Flow / Veo.
+For each clip in the script, generate a complete Google Flow / Veo prompt.
 
-Format pour chaque clip :
+Format for each clip (respond only in English):
 
-### CLIP [numéro] — [titre/type de scène]
+### CLIP [number] — [scene title/type]
 
-**Scène :** Description courte de la scène
+**Scene:** Short scene description
 
-**Prompt Google Flow :**
-[Style prefix anime] + [Description détaillée en anglais : décor, lumière, angle caméra, personnages présents avec description précise de leur apparence et vêtements, action, mouvement]
+**Google Flow prompt:**
+[Adaptive style prefix matching "${visualStyle}"] + [Detailed English description: set, lighting, camera angle, characters with precise appearance and clothing, action, motion]
 
-**Lip Sync :** [Si dialogue : transcription exacte + description syllabe par syllabe des mouvements de lèvres]
+**Lip Sync:** [If dialogue: exact transcript + syllable-by-syllable lip movement description]
 
-**Audio :** [Dialogue exact ou description VO]
+**Audio:** [Exact dialogue or VO description]
 
 ---
 
-Sois extrêmement précis sur les descriptions visuelles. Assure la cohérence visuelle des personnages entre tous les clips.`;
+Be extremely precise with visual descriptions. Keep character visuals consistent across all clips. Match the user style "${visualStyle}" in every style prefix — never default to anime when another style was chosen.`;
 
   const response = await fetch(
     'https://api.groq.com/openai/v1/chat/completions',
